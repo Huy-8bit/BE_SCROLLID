@@ -1,0 +1,27 @@
+version: "3"
+services:
+  scroll-id-dns-api:
+    image: scroll-id-dns-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    restart: always
+    ports:
+      - 6006:5005
+    networks:
+      - base-network
+    command: gunicorn --bind 0.0.0.0:5005 --workers=1 main:app --log-level=debug -c conf/gunicorn.py --timeout 0
+
+  scroll-id-dns-domain-queue:
+    image: scroll-id-dns-api
+    container_name: scroll-id-dns-queue
+    restart: always
+    networks:
+      - base-network
+
+    command: celery --app worker worker -Q dns-domain-queue -l INFO -c 4
+
+networks:
+  base-network:
+    external: true
